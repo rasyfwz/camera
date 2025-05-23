@@ -8,9 +8,15 @@ import struct
 import numpy as np
 import pdb
 import time
+from camera_view import Camstream
 
 TS=False
-btAddress="C9:4D:53:60:23:BD"
+btAddress1="C9:4D:53:60:23:BD"
+btAddress2="E7:52:EE:29:45:D5"
+
+cam1 = Camstream()
+cam2 = Camstream()
+
 #btAddress="D0:7B:4A:C9:AB:01"
 #btAddress="F8:0E:C5:1E:C2:26"
 #btAddress="E2:6D:BF:ED:08:C7"
@@ -52,6 +58,38 @@ if __name__ == '__main__':
       exit
 
     portName = ports[port].device
+
+    print("select address")
+    print("0: {}    1: {}".format(btAddress1, btAddress2))
+    camselect = input(": ")
+    camselect = int(camselect)
+
+    i = 1
+    ports = sorted(ports)
+    for port, desc, hwid in ports:
+      print("Serial device ({}) : {}".format(i, port))
+      i += 1
+
+    read = input("Select serial port to read from its number:")
+
+    try:
+      read = int(read)
+    except ValueError:
+      print("Invalid port number")
+
+    read -= 1 # offset by 1
+
+    if (read >= len(ports)) or (read < 0):
+      print("Invalid port number")
+      exit
+
+    readdata = ports[read].device
+
+    if camselect == 0:
+      btAddress = btAddress1
+    if camselect == 1:
+      btAddress=btAddress2
+
     # portName = "/dev/tty.usbmodem0006832759131"
     ser = serial.Serial(portName, 115200)
 
@@ -107,6 +145,11 @@ if __name__ == '__main__':
         serialHelper(ser, "gatt write command " + btAddress + " 1403 0xB1")
         scriptIndex += 1
         time.sleep(.25)
+        if camselect == 0:
+          cam1.startstream(readdata)
+        if camselect == 1:
+          cam2.startstream(readdata)
+
       # if (scriptIndex == 8):
       #   os.open("cd camera")
       #   scriptIndex += 1
